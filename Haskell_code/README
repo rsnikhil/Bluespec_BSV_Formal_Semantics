@@ -20,7 +20,7 @@ to execute the command 'runghc'.
 
 Example runs:
 
-    $ runghc Main 100 GCD.kbsv
+    $ runghc Main 100 Progs/GCD.kbsv
     .... Clock 0
     .... Clock 1
     .... Clock 2
