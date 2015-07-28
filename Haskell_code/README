@@ -1,0 +1,48 @@
+Copyright (c) 2012-2015 Rishiyur S. Nikhil.  All Rights Reserved.
+
+This is a Haskell program to explicate the dynamic semantics of BSV,
+i.e., the semantics of concurrency and schedules.  Source files are
+written in a small kernel language capturing the essence of BSV:
+module declaration, module instantiation, rules, methods, etc.
+
+Note: since we completely ignore types, it is possible to write
+``wrong'' programs which either behave very strangely or report some
+errors only during simulation instead of statically.  Be careful as
+you write kernel source programs.
+
+The ``schedule'' at the bottom of each source file represents a
+sequence of hierarchical rule instance names.  Each list identifies a
+rule in the module hierarchy, i.e., it is a list of module instance
+names down the hierarchy, ending in a rule name.
+
+To run the program, you should have GHC installed and should be able
+to execute the command 'runghc'.
+
+Example runs:
+
+    $ runghc Main 100 GCD.kbsv
+    .... Clock 0
+    .... Clock 1
+    .... Clock 2
+    .... Clock 3
+    .... Clock 4
+    .... Clock 5
+    .... Clock 6
+    DISPLAY: 8
+    .... Clock 7
+    No rule fired on cycle 7
+
+Main identifies the Main.hs file as the top-level.
+
+100 is a limit on the number of (logical) clock cycles to simulate (it
+may quit earlier, if no rules fire in any clock).
+
+GCD.kbsv is the kernel BSV source program for GCD.
+
+You can increase the verbosity of the output by editing the value of
+'debugLevel' in Utils.hs from 0 to 1 or 2 or ..., to see what's
+happening during every clock, including reporting of conflicts, type
+of conflict, etc.
+
+You can edit the schedule at the bottom of each source file to try
+execution with a different schedule.

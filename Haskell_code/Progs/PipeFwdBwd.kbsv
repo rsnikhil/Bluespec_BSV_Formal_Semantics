@@ -1,0 +1,100 @@
+-- Copyright (c) 2012-2015 Rishiyur S. Nikhil.  All Rights Reserved.
+
+-- ----------------------------------------------------------------
+-- Pipeline Fifo of depth 1
+
+module mkPipelineFIFO;
+    let full = mkCReg (2, 0);
+    let data = mkCReg (2, 0);
+
+  rules
+    -- no rules
+
+  methods
+    method V first () if (full._read0 () == 1);
+      data._read0 ()
+    endmethod
+
+    method A deq () if (full._read0 () == 1);
+      full._write0 (0)
+    endmethod
+
+    method A enq (x) if (full._read1 () == 0);
+      data._write1 (x);
+      full._write1 (1)
+    endmethod
+endmodule
+
+-- ----------------------------------------------------------------
+-- Bypass Fifo of depth 1
+
+module mkBypassFIFO;
+    let full = mkCReg (2, 0);
+    let data = mkCReg (2, 0);
+
+  rules
+    -- no rules
+
+  methods
+    method V first () if (full._read1 () == 1);
+      data._read1 ()
+    endmethod
+
+    method A deq () if (full._read1 () == 1);
+      full._write1 (0)
+    endmethod
+
+    method A enq (x) if (full._read0 () == 0);
+      data._write0 (x);
+      full._write0 (1)
+    endmethod
+endmodule
+
+-- ----------------------------------------------------------------
+-- Test program
+
+module main;
+    let z     = mkReg (0);
+    let fifo  = mkPipelineFIFO ();
+    let fifo2 = mkBypassFIFO ();
+
+  rules
+    rule init (z._read () == 0);
+      fifo.enq (0);
+      z._write (1)
+    endrule
+
+    rule feed;
+      fifo.enq (z._read ());
+      z._write (z._read () + 1);
+
+      let v = fifo2.first (); fifo2.deq ();
+      $display ("rule feed: ");
+      $display (v)
+    endrule
+
+    rule drain;
+      let w = fifo.first (); fifo.deq ();
+      fifo2.enq (0 - z._read ());
+      $display ("rule drain: ");
+      $display (w)
+    endrule
+  methods
+endmodule
+
+-- ----------------------------------------------------------------
+-- Schedules
+
+-- Sched 1 (pipelining happens)
+schedule
+  [main, drain]
+  [main, feed]
+  [main, init]
+
+/*
+-- Sched 2 (pipelining does not happen, rules alternate)
+schedule
+  [main, feed]
+  [main, drain]
+  [main, init]
+*/

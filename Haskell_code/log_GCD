@@ -1,0 +1,197 @@
+---- Input file  Progs/GCD.kbsv
+---- Top-level bindings
+  let mkGCD = (lambda () 
+      MODULE
+          let zero = 0
+          let x = mkReg(zero)
+          let y = mkReg(zero)
+          let busy = mkReg(zero)
+        RULES
+          rule swap when (And(And(Gt(x._read(),y._read()),Eq(busy._read(),1)),Neq(y._read(),0)));
+            begin
+              x._write(y._read());
+              y._write(x._read());
+            end
+          rule subtract when (And(And(Leq(x._read(),y._read()),Eq(busy._read(),1)),Neq(y._read(),0)));
+            begin
+              y._write(Minus(y._read(),x._read()));
+            end
+        METHODS
+          method A start when (Eq(busy._read(),0));
+            (lambda (num1,num2) 
+              begin
+                x._write(num1);
+                y._write(num2);
+                busy._write(1);
+              end)
+          endmethod
+          method AV getResult when (And(Eq(busy._read(),1),Eq(y._read(),0)));
+            (lambda () 
+              begin
+                busy._write(0);
+                x._read();
+              end)
+          endmethod
+      ENDMODULE)
+  let main = (lambda () 
+      MODULE
+          let state = mkReg(0)
+          let gcd = mkGCD()
+        RULES
+          rule init when (Eq(state._read(),0));
+            begin
+              gcd.start(24,16);
+              state._write(1);
+            end
+          rule finish when (Eq(state._read(),1));
+            begin
+              let z = gcd.getResult()
+              $display("The GCD is ");
+              $display(z);
+              state._write(2);
+            end
+        METHODS
+      ENDMODULE)
+---- Schedule
+  ["main","init"]
+  ["main","finish"]
+  ["main","gcd","swap"]
+  ["main","gcd","subtract"]
+---- Elaborated program
+  0 ["main","state"]    PMIReg 0
+  1 ["main","gcd","x"]    PMIReg 0
+  2 ["main","gcd","y"]    PMIReg 0
+  3 ["main","gcd","busy"]    PMIReg 0
+  4 ["main","gcd"]
+    UMI 
+        zero = 0
+        x = ModuleInstRef 1
+        y = ModuleInstRef 2
+        busy = ModuleInstRef 3
+      RULES
+        rule swap when (And(And(Gt(x._read(),y._read()),Eq(busy._read(),1)),Neq(y._read(),0)));
+          begin
+            x._write(y._read());
+            y._write(x._read());
+          end
+        rule subtract when (And(And(Leq(x._read(),y._read()),Eq(busy._read(),1)),Neq(y._read(),0)));
+          begin
+            y._write(Minus(y._read(),x._read()));
+          end
+      METHODS
+        method A start when (Eq(busy._read(),0));
+          (lambda (num1,num2) 
+            begin
+              x._write(num1);
+              y._write(num2);
+              busy._write(1);
+            end)
+        endmethod
+        method AV getResult when (And(Eq(busy._read(),1),Eq(y._read(),0)));
+          (lambda () 
+            begin
+              busy._write(0);
+              x._read();
+            end)
+        endmethod
+    EUMI
+  5 ["main"]
+    UMI 
+        state = ModuleInstRef 0
+        gcd = ModuleInstRef 4
+      RULES
+        rule init when (Eq(state._read(),0));
+          begin
+            gcd.start(24,16);
+            state._write(1);
+          end
+        rule finish when (Eq(state._read(),1));
+          begin
+            let z = gcd.getResult()
+            $display("The GCD is ");
+            $display(z);
+            state._write(2);
+          end
+      METHODS
+    EUMI
+value of main(): ModuleInstRef 5
+.... Clock 0
+  Rule ["main","init"] fired
+  Rule ["main","finish"]
+    inter-rule conflicts:
+      ["main","state"] _write > _read
+  Rule ["main","gcd","swap"]
+    inter-rule conflicts:
+      ["main","gcd","x"] _write > _read
+      ["main","gcd","x"] _write > _read
+      ["main","gcd","y"] _write > _read
+      ["main","gcd","y"] _write > _read
+      ["main","gcd","y"] _write > _read
+      ["main","gcd","busy"] _write > _read
+  Rule ["main","gcd","subtract"]
+    inter-rule conflicts:
+      ["main","gcd","x"] _write > _read
+      ["main","gcd","y"] _write > _read
+      ["main","gcd","y"] _write > _read
+      ["main","gcd","busy"] _write > _read
+.... Clock 1
+  Rule ["main","init"] unavail
+  Rule ["main","finish"] unavail
+  Rule ["main","gcd","swap"] fired
+  Rule ["main","gcd","subtract"]
+    inter-rule conflicts:
+      ["main","gcd","x"] _write > _read
+      ["main","gcd","x"] _write > _read
+      ["main","gcd","y"] _write > _read
+      ["main","gcd","y"] _write > _read
+      ["main","gcd","y"] _write > _read
+.... Clock 2
+  Rule ["main","init"] unavail
+  Rule ["main","finish"] unavail
+  Rule ["main","gcd","swap"] unavail
+  Rule ["main","gcd","subtract"] fired
+.... Clock 3
+  Rule ["main","init"] unavail
+  Rule ["main","finish"] unavail
+  Rule ["main","gcd","swap"] fired
+  Rule ["main","gcd","subtract"]
+    inter-rule conflicts:
+      ["main","gcd","x"] _write > _read
+      ["main","gcd","x"] _write > _read
+      ["main","gcd","y"] _write > _read
+      ["main","gcd","y"] _write > _read
+      ["main","gcd","y"] _write > _read
+.... Clock 4
+  Rule ["main","init"] unavail
+  Rule ["main","finish"] unavail
+  Rule ["main","gcd","swap"] unavail
+  Rule ["main","gcd","subtract"] fired
+.... Clock 5
+  Rule ["main","init"] unavail
+  Rule ["main","finish"] unavail
+  Rule ["main","gcd","swap"] unavail
+  Rule ["main","gcd","subtract"] fired
+.... Clock 6
+  Rule ["main","init"] unavail
+  Rule ["main","finish"] fired
+$DISPLAY: The GCD is 
+$DISPLAY: 8
+  Rule ["main","gcd","swap"]
+    inter-rule conflicts:
+      ["main","gcd","busy"] _write > _read
+  Rule ["main","gcd","subtract"]
+    inter-rule conflicts:
+      ["main","gcd","busy"] _write > _read
+.... Clock 7
+  Rule ["main","init"] unavail
+  Rule ["main","finish"] unavail
+  Rule ["main","gcd","swap"] unavail
+  Rule ["main","gcd","subtract"] unavail
+No rule fired on cycle 7
+---- final system: 
+  0 ["main","state"]    PMIReg 2
+  1 ["main","gcd","x"]    PMIReg 8
+  2 ["main","gcd","y"]    PMIReg 0
+  3 ["main","gcd","busy"]    PMIReg 0
+  4 ["main","gcd"]UMI ...
+  5 ["main"]UMI ...

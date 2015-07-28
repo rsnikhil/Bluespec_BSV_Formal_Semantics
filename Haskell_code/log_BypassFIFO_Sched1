@@ -1,0 +1,670 @@
+---- Input file  Progs/BypassFIFO.kbsv
+---- Top-level bindings
+  let mkBypassFIFO = (lambda () 
+      MODULE
+          let full = mkCReg(2,0)
+          let data = mkCReg(2,0)
+        RULES
+        METHODS
+          method A enq when (Eq(full._read0(),0));
+            (lambda (x) 
+              begin
+                data._write0(x);
+                full._write0(1);
+              end)
+          endmethod
+          method V notEmpty when (1);
+            (lambda () 
+              begin
+                full._read1();
+              end)
+          endmethod
+          method V first when (Eq(full._read1(),1));
+            (lambda () 
+              begin
+                data._read1();
+              end)
+          endmethod
+          method A deq when (Eq(full._read1(),1));
+            (lambda () 
+              begin
+                full._write1(0);
+              end)
+          endmethod
+      ENDMODULE)
+  let main = (lambda () 
+      MODULE
+          let x = mkReg(0)
+          let f = mkBypassFIFO()
+        RULES
+          rule feed when (1);
+            begin
+              f.enq(x._read());
+              x._write(Plus(x._read(),1));
+            end
+          rule drain when (f.notEmpty());
+            begin
+              $display("RESULT");
+              $display(f.first());
+              f.deq();
+            end
+        METHODS
+      ENDMODULE)
+---- Schedule
+  ["main","drain"]
+  ["main","feed"]
+---- Elaborated program
+  0 ["main","x"]    PMIReg 0
+  1 ["main","f","full"]    PMICReg 2 0
+  2 ["main","f","data"]    PMICReg 2 0
+  3 ["main","f"]
+    UMI 
+        full = ModuleInstRef 1
+        data = ModuleInstRef 2
+      RULES
+      METHODS
+        method A enq when (Eq(full._read0(),0));
+          (lambda (x) 
+            begin
+              data._write0(x);
+              full._write0(1);
+            end)
+        endmethod
+        method V notEmpty when (1);
+          (lambda () 
+            begin
+              full._read1();
+            end)
+        endmethod
+        method V first when (Eq(full._read1(),1));
+          (lambda () 
+            begin
+              data._read1();
+            end)
+        endmethod
+        method A deq when (Eq(full._read1(),1));
+          (lambda () 
+            begin
+              full._write1(0);
+            end)
+        endmethod
+    EUMI
+  4 ["main"]
+    UMI 
+        x = ModuleInstRef 0
+        f = ModuleInstRef 3
+      RULES
+        rule feed when (1);
+          begin
+            f.enq(x._read());
+            x._write(Plus(x._read(),1));
+          end
+        rule drain when (f.notEmpty());
+          begin
+            $display("RESULT");
+            $display(f.first());
+            f.deq();
+          end
+      METHODS
+    EUMI
+value of main(): ModuleInstRef 4
+.... Clock 0
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 1
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 0
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 2
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 3
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 1
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 4
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 5
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 2
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 6
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 7
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 3
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 8
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 9
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 4
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 10
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 11
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 5
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 12
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 13
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 6
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 14
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 15
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 7
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 16
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 17
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 8
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 18
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 19
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 9
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 20
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 21
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 10
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 22
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 23
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 11
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 24
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 25
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 12
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 26
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 27
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 13
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 28
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 29
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 14
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 30
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 31
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 15
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 32
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 33
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 16
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 34
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 35
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 17
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 36
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 37
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 18
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 38
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 39
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 19
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 40
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 41
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 20
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 42
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 43
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 21
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 44
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 45
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 22
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 46
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 47
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 23
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 48
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 49
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 24
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 50
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 51
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 25
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 52
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 53
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 26
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 54
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 55
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 27
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 56
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 57
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 28
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 58
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 59
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 29
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 60
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 61
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 30
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 62
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 63
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 31
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 64
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 65
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 32
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 66
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 67
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 33
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 68
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 69
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 34
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 70
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 71
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 35
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 72
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 73
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 36
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 74
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 75
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 37
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 76
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 77
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 38
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 78
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 79
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 39
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 80
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 81
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 40
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 82
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 83
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 41
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 84
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 85
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 42
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 86
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 87
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 43
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 88
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 89
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 44
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 90
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 91
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 45
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 92
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 93
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 46
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 94
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 95
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 47
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 96
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 97
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 48
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 98
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+.... Clock 99
+  Rule ["main","drain"] fired
+$DISPLAY: RESULT
+$DISPLAY: 49
+  Rule ["main","feed"]
+    inter-rule conflicts:
+      ["main","f","full"] _write1 > _read0
+      ["main","f","full"] _write1 > _write0
+.... Clock 100
+  Rule ["main","drain"] unavail
+  Rule ["main","feed"] fired
+Cycle limit reached: 100
+---- final system: 
+  0 ["main","x"]    PMIReg 51
+  1 ["main","f","full"]    PMICReg 2 1
+  2 ["main","f","data"]    PMICReg 2 50
+  3 ["main","f"]UMI ...
+  4 ["main"]UMI ...

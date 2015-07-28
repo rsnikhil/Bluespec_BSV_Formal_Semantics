@@ -1,0 +1,66 @@
+-- Copyright (c) 2012-2015 Rishiyur S. Nikhil.  All Rights Reserved.
+
+-- ----------------------------------------------------------------
+-- Bypass Fifo of depth 1
+
+module mkBypassFIFO;
+    let full = mkCReg (2, 0);
+    let data = mkCReg (2, 0);
+
+  rules
+    -- no rules
+
+  methods
+    method A enq (x) if (full._read0 () == 0);
+      data._write0 (x);
+      full._write0 (1)
+    endmethod
+
+    method V notEmpty ();
+      full._read1 ()
+    endmethod
+
+    method V first () if (full._read1 () == 1);
+      data._read1 ()
+    endmethod
+
+    method A deq () if (full._read1 () == 1);
+      full._write1 (0)
+    endmethod
+endmodule
+
+-- ----------------------------------------------------------------
+-- Test program
+
+module main;
+    let x = mkReg (0);
+    let f = mkBypassFIFO ();
+
+  rules
+    rule feed;
+      f.enq (x._read());
+      x._write (x._read() + 1)
+    endrule
+
+    rule drain (f.notEmpty ());
+      $display ("RESULT");
+      $display (f.first ());
+      f.deq ()
+    endrule
+  methods
+endmodule
+
+-- ----------------------------------------------------------------
+-- Schedules
+
+/*
+-- Sched 1 (pipelining does not happen, rules alternate)
+schedule
+  [ main, drain ]
+  [ main, feed ]
+*/
+
+-- Sched 2 (pipelining happens)
+schedule
+  [ main, feed ]
+  [ main, drain ]

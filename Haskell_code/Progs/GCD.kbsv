@@ -1,0 +1,67 @@
+-- Copyright (c) 2012-2015 Rishiyur S. Nikhil.  All Rights Reserved.
+
+-- ----------------------------------------------------------------
+-- GCD
+
+module mkGCD;
+    let  zero = 0;
+    let x = mkReg (zero);
+    let y = mkReg (zero);
+    let busy = mkReg (zero);
+
+  rules
+    rule swap (   x._read()     >  y._read()
+               && busy._read () == 1
+               && y._read ()    != 0);
+        x._write (y._read ());
+        y._write (x._read ())
+    endrule
+
+    rule subtract (   x._read ()    <= y._read ()
+                   && busy._read () == 1
+                   && y._read ()    != 0);
+        y._write (y._read () - x._read ())
+    endrule
+
+  methods
+    method A start (num1, num2) if (busy._read () == 0);
+        x._write (num1);
+        y._write (num2);
+	busy._write (1)
+    endmethod
+
+    method AV getResult () if ((busy._read () == 1) && (y._read () == 0));
+	busy._write (0);
+        x._read ()
+    endmethod
+endmodule
+
+-- ----------------------------------------------------------------
+-- Test program
+
+module main;
+    let state = mkReg (0);
+    let gcd = mkGCD ();
+
+  rules
+    rule init (state._read () == 0);
+        gcd.start (24, 16);
+	state._write (1)
+    endrule
+
+    rule finish (state._read () == 1);
+        let z = gcd.getResult ();
+	$display ("The GCD is ");
+	$display (z);
+	state._write (2)
+    endrule
+  methods
+endmodule
+
+-- ================================================================
+
+schedule
+  [main, init]
+  [main, finish]
+  [main, gcd, swap]
+  [main, gcd, subtract]
