@@ -1,4 +1,4 @@
-DOCNAME = BSV_semantics
+DOCNAME = BSV_Semantics
 SOURCES = Makefile $(DOCNAME).tex
 
 .PHONY: default
