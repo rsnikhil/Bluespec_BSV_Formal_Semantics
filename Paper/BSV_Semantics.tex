@@ -383,7 +383,7 @@ this statically elaborated circuit.
 In this document, we will not discuss the part of BSV static semantics
 that coincides directly with Haskell (specifically types,
 polymorphism, type classes, type-checking and monadic elaboration).
-We will describe BSV's static eloboration, because modules, module
+We will describe BSV's static elaboration, because modules, module
 instances, and module \emph{sharing} are fundamental concepts.
 
 % ----------------------------------------------------------------
@@ -453,7 +453,7 @@ operational semantics.
 
 As is common in the literature, we will describe BSV's semantics for a
 \emph{kernel} or subset of the language.  Extending it to the full
-language would be routine but tedious to desribe and to understand,
+language would be routine but tedious to describe and to understand,
 without providing any useful additional illumination.  Nevertheless,
 our kernel language is more comprehensive than previous toy
 descriptions of BSV semantics, and captures the essence of the actual
@@ -488,7 +488,7 @@ with this semantics to define a version of BSV based entirely on FIFOs
 or RAMs, or even registers with different semantics.  This semantics
 is, in effect, parameterized by a set of primitives.  All it assumes
 is that each primitive is supplied with the primitive semantics of the
-methods when invoked (within in an Action) and the parallel
+methods when invoked (within an Action) and the parallel
 (intra-rule) and concurrent (inter-rule) ordering constraints on its
 methods.
 
@@ -616,7 +616,7 @@ type MethName = String      -- Method names
 type HierName = [Ide]       -- Hierarchical name
 \end{Verbatim}
 
-The schedule is a list of hierarichal names, each referring to a
+The schedule is a list of hierarchical names, each referring to a
 unique post-elaboration instance of a rule.
 
 \begin{Verbatim}[frame=single, commandchars=\\\{\}]
@@ -771,7 +771,7 @@ Then we have the method body, which is a sequence of
 statements.
 
 In the abstract syntax, this is converted into a \term{MethDef} that
-contains the the method kind, the method name, and a When-expression.
+contains the method kind, the method name, and a When-expression.
 whose condition is the method condition and whose body is a
 lambda-expression.  The lambda-expression's arguments are the method
 arguments, and the body is a Block containing the method's statements:
@@ -1009,7 +1009,7 @@ data Expr = ...
 
 \subsection{The Static Elaboration function}
 
-Static elaboration is carried but by this function:
+Static elaboration is carried out by this function:
 
 \begin{Verbatim}[frame=single, commandchars=\\\{\}]
 staticElab :: [Binding] -> (System, Expr)
@@ -1023,8 +1023,8 @@ the parser.  It merely calls the \term{eval} function, to be described
 next, giving it:
 \begin{tightlist}
 \item an initially empty environment: \term{[]},
-\item an initial hierarichical name: \term{["main"]}
-\item an initially empty map of module instances: \term{DI.empy},
+\item an initial hierarchical name: \term{["main"]}
+\item an initially empty map of module instances: \term{DI.empty},
 \item and an initial application: \term{[main]} (\term{main} applied to no arguments).
 \end{tightlist}
 
@@ -2415,7 +2415,7 @@ The last 10 years has seen the emergence of a number of commercial
 tools for hardware design under the category of ``High Level
 Synthesis'', or HLS for short \cite{Coussy2009} (we'll refer to this
 as ``classical HLS'').  The input design language for these tools is
-an existing language, typically C or C++ (or SystemC, which is a just
+an existing language, typically C or C++ (or SystemC, which is just
 a C++ library \cite{IEEESystemC2011a}).  This is paradoxical, since C
 and C++ are, formally, completely sequential languages, from which
 classical HLS tries to generate hardware which, quintessentially, has
@@ -2502,7 +2502,7 @@ schedules are always permutations of the rule-instance set, i.e., each
 rule-instance appears in the schedule exactly once.  The dynamic
 semantics has no such restriction.
 
-As described earlier in Sec.~\ref{sec_schedules}, this semantics take
+As described earlier in Sec.~\ref{sec_schedules}, this semantics takes
 no position on schedules.  A schedule is a parameter to this
 semantics, and may therefore be produced by an oracle, even one that
 dynamically selects the next rule at the last moment.  There is no
