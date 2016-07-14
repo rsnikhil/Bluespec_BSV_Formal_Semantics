@@ -8,11 +8,12 @@ module Parser
 where
 
 import qualified Control.Applicative  as CA ( (<*) )
-import qualified Text.Parsec          as TP
-import qualified Text.Parsec.String   as TPS
-import qualified Text.Parsec.Expr     as TPE
-import qualified Text.Parsec.Token    as TPT
-import qualified Text.Parsec.Language as TPL
+import qualified Text.ParserCombinators.Parsec          as TP
+-- import qualified Text.ParserCombinators.Parsec.String   as TPS
+import qualified Text.ParserCombinators.Parsec.Prim     as TPPP
+import qualified Text.ParserCombinators.Parsec.Expr     as TPE
+import qualified Text.ParserCombinators.Parsec.Token    as TPT
+import qualified Text.ParserCombinators.Parsec.Language as TPL
 
 import AST
 
@@ -25,7 +26,7 @@ parseProgramFromString s = case (TP.parse programParser "" s) of
                                Left err -> error ("Error parsing input:" ++ show err)
                                Right ans -> ans
 
-programParser :: TPS.Parser Program
+programParser :: TPPP.Parser Program
 programParser = m_whiteSpace >> do bindings <- TP.many moduleParser  CA.<*  m_symbol "schedule"
                                    schedule <- TP.many hierRuleNameParser  CA.<*  TP.eof
                                    return (bindings, schedule)
@@ -33,7 +34,7 @@ programParser = m_whiteSpace >> do bindings <- TP.many moduleParser  CA.<*  m_sy
 -- ================================================================
 -- Modules
 
-moduleParser :: TPS.Parser Binding
+moduleParser :: TPPP.Parser Binding
 moduleParser = do m_reserved "module"
                   ide <- m_identifier
                   params <- do { m_symbol "#"; m_parens (m_commaSep m_identifier) } TP.<|> return []
@@ -43,13 +44,13 @@ moduleParser = do m_reserved "module"
                   methods  <- TP.many methDefParser  CA.<*  m_reserved "endmodule"
                   return $ (EIde ide, Lambda (map EIde params) (ModuleExpr bindings rules methods))
 
-modBindingParser :: TPS.Parser Binding
+modBindingParser :: TPPP.Parser Binding
 modBindingParser = do b <- bindingParser; m_symbol ";"; return b
 
 -- ================================================================
 -- Bindings
 
-bindingParser :: TPS.Parser Binding
+bindingParser :: TPPP.Parser Binding
 bindingParser =
     do { m_reserved "let"; v <- m_identifier; m_symbol "="; e <- exprParser;
        ; return (EIde v, e) }
@@ -57,7 +58,7 @@ bindingParser =
 -- ================================================================
 -- Rules (inside a ModuleExpr)
 
-ruleParser :: TPS.Parser Rule
+ruleParser :: TPPP.Parser Rule
 ruleParser = do m_reserved "rule"; ide <- m_identifier; e <- (m_parens exprParser TP.<|> return (ConstI 1)); m_symbol ";"
                 ss <- stmtSeqParser "endrule"
                 return $ Rule ide (When e (Block ss))
@@ -65,7 +66,7 @@ ruleParser = do m_reserved "rule"; ide <- m_identifier; e <- (m_parens exprParse
 -- ================================================================
 -- Method definitions (inside a ModuleExpr)
 
-methDefParser :: TPS.Parser MethDef
+methDefParser :: TPPP.Parser MethDef
 methDefParser = do m_reserved "method"
                    methkind <- m_identifier    -- "V", "A" or "AV"
                    ide <- m_identifier
@@ -78,23 +79,23 @@ methDefParser = do m_reserved "method"
 -- ================================================================
 -- Expressions
 
-exprParser :: TPS.Parser Expr
+exprParser :: TPPP.Parser Expr
 exprParser = TPE.buildExpressionParser  operator_table  term  TP.<?>  "expression"
 
 -- Applications: t (arg1, ..., argN)
-term :: TPS.Parser Expr
+term :: TPPP.Parser Expr
 term = do { t <- term1
           ; TP.try (arglist t) TP.<|> return t
           }
 
 -- Methods: t.methodname
-term1 :: TPS.Parser Expr
+term1 :: TPPP.Parser Expr
 term1 = do { t <- term2
            ; TP.try (do { m_symbol "."; m <- m_identifier; return $ MethodVal t m}) TP.<|> return t
            }
 
 -- General expressions
-term2 :: TPS.Parser Expr
+term2 :: TPPP.Parser Expr
 term2 = -- (e)
         m_parens exprParser
         -- Void
@@ -157,7 +158,7 @@ binopApp :: Expr -> Expr -> Expr -> Expr
 binopApp op arg1 arg2 = App [op, arg1, arg2]
 
 -- Applications: e is a function; parses the arg list in parens and returns the application
-arglist :: Expr -> TPS.Parser Expr
+arglist :: Expr -> TPPP.Parser Expr
 arglist e = do { es <- m_parens (m_commaSep exprParser)
                ; return (App (e:es))
                }
@@ -165,10 +166,10 @@ arglist e = do { es <- m_parens (m_commaSep exprParser)
 -- ================================================================
 -- Action statements
 
-stmtSeqParser :: String -> TPS.Parser [Stmt]
+stmtSeqParser :: String -> TPPP.Parser [Stmt]
 stmtSeqParser terminator = m_semiSep (stmtParser terminator)  CA.<*  m_reserved terminator
 
-stmtParser :: String -> TPS.Parser Stmt
+stmtParser :: String -> TPPP.Parser Stmt
 stmtParser terminator=
     do { b <- bindingParser; return $ StmtBinding b }
     TP.<|> do { e <- exprParser; return $ StmtExpr e }
@@ -176,7 +177,7 @@ stmtParser terminator=
 -- ================================================================
 -- Hierarchical Rule Names (part of rule schedule)
 
-hierRuleNameParser :: TPS.Parser HierName
+hierRuleNameParser :: TPPP.Parser HierName
 hierRuleNameParser = do m_symbol "["
                         xs <- m_commaSep m_identifier
                         m_symbol "]"
