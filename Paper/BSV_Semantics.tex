@@ -138,7 +138,8 @@ Rishiyur S. Nikhil
 
 \vspace{1ex}
 
-Bluespec, Inc., July 28, 2015
+Bluespec, Inc. \\
+July 28, 2015 (rev. July 15, 2016)
 
 \end{center}
 
@@ -347,8 +348,8 @@ In hardware, there is no such dynamic control structure.  Hardware
 consists of physical electronics; they do not grow or shrink during
 execution!\footnote{Of course it is always possible to
 \emph{represent} a dynamic stack in memory in a hardware system, but
-that is a level of abstraction above our current level of discourse,
-namely physical hardware.}
+that is a level of abstraction and interpretation above our current
+level of discourse, namely physical hardware.}
 
 Nevertheless, you will find functions and procedures in all modern
 HDLs.  In BSV you will also see extensive use of methods, loops, and
@@ -391,7 +392,7 @@ instances, and module \emph{sharing} are fundamental concepts.
 \subsection{TRSs, Linear Orders, and Clocks}
 
 Classical TRSs are non-deterministic, and have no notion of clocks.
-The basic dynamic semantics of TRSs is almost trivial:
+The basic dynamic semantics of a TRS is almost trivial:
 \begin{itemize}
 
 \item Given the current state (a ``term''), find a part of the state
@@ -409,7 +410,7 @@ this a \emph{rule firing}.
 \noindent The description above is sequential (one rule at a time) and
 may seem at odds with our earlier claim that this is a favorite way
 amongst researchers to model complex concurrency.  The apparent
-paradox is resolved by realizing (a) that it is non-sequential in that
+paradox is resolved by realizing (a) it is non-sequential in that
 there is no prescribed ``control flow'' or ``program counter'' to
 sequence rules; it is purely reactive--which rule can fire depends
 only on the instantaneous state, and (b) \emph{any} actual concurrent
@@ -431,7 +432,7 @@ design choice based on current tractability; a more general future
 approach may allow rules to use multiple clocks.}
 
 \item Many BSV rules may fire within a clock, but there will always be
-a \emph{logical linear order} that explains their behavior.
+a \emph{logical linear order} (serialization) that explains their behavior.
 
 \item There will be practical constraints (described later) that
 preclude certain rules from firing within the same clock in a certain
@@ -443,9 +444,9 @@ order.
 
 \subsection{Haskell executability}
 
-Our specification is given as a Haskell program, and is executable.
-It can be characterized as a high-level implementation-independent
-operational semantics.
+Our specification is given as a Haskell program, which is of course
+executable.  It can be characterized as an abstract operational
+semantics (high-level, implementation-independent).
 
 % ----------------------------------------------------------------
 
@@ -456,10 +457,10 @@ As is common in the literature, we will describe BSV's semantics for a
 language would be routine but tedious to describe and to understand,
 without providing any useful additional illumination.  Nevertheless,
 our kernel language is more comprehensive than previous toy
-descriptions of BSV semantics, and captures the essence of the actual
-BSV code behavior (specifically: module instances and module sharing).
-Further, it is \emph{the} mental model that one uses in practice when
-developing and debugging BSV code.
+descriptions of BSV semantics, and captures the essence of actual BSV
+code behavior (specifically: module instances and module sharing).
+Further, it is \emph{the} mental model that BSV designers use in
+practice when developing and debugging BSV code.
 
 % ----------------------------------------------------------------
 
@@ -487,10 +488,21 @@ primitives (such as registers).  For example, it is perfectly feasible
 with this semantics to define a version of BSV based entirely on FIFOs
 or RAMs, or even registers with different semantics.  This semantics
 is, in effect, parameterized by a set of primitives.  All it assumes
-is that each primitive is supplied with the primitive semantics of the
-methods when invoked (within an Action) and the parallel
-(intra-rule) and concurrent (inter-rule) ordering constraints on its
-methods.
+is that each primitive is supplied with:
+
+\begin{itemize}
+
+\item An abstract function for the the primitive semantics of each
+method when invoked (within an Action),
+
+\item the parallel (intra-rule) constraints on its methods (i.e., for
+each pair of methods, whether or not those two methods can be invoked
+in the same Action),
+
+\item the concurrent (inter-rule) ordering constraints on its methods
+(i.e., for each pair of methods, the logical ordering of those methods
+if they are invoked in different rules).
+\end{itemize}
 
 Of course in practice our primitives include registers, Concurrent
 Registers, FIFOs, BRAMs and more.  The accompanying Haskell code
@@ -512,21 +524,20 @@ It is important to distinguish two quite separate questions:
 \begin{itemize}
 
 \item How should one to construct a schedule from the rules in a BSV
-program?  Typically, this is the job of a compiler which, may, for
-example, try to construct a schedule that maximizes concurrency.
+program?  This could range from a completely fixed, static schedule
+chosen by a compiler (e.g., current \emph{bsc}) to a completely
+dynamic function that selects the next rule for execution just before
+executing it.
 
 \item Given a schedule, what is a \emph{correct execution} of the schedule?
 
 \end{itemize}
 
-In this document, we only address the latter question.  A schedule is
-provided as an argument to the main semantic function, and may as well
-be provided by an oracle that selects the next rule instance to be
-considered at the very last moment (when we are ready to execute the
-next rule instance in the current clock).  Thus, the semantics defined
-here can be seen as \emph{universally quantified over all possible
-schedules} i.e., describing correct execution for any possible
-schedule.
+In this document, we only address the latter question.  A scheduling
+function is provided as an argument to the main semantic function.
+Thus, the semantics defined here can be seen as \emph{universally
+quantified over all possible schedules} i.e., describing correct
+execution for any possible schedule.
 
 In this semantics there is no such thing as a ``wrong'' schedule.  Of
 course, from a practical point of view, some schedules are likely to
@@ -545,9 +556,10 @@ Our description here is therefore more general than the current
 
 \end{tightlist}
 
-In contrast, the semantic description here admits schedules that may
-vary from clock to clock, and may include duplicate rule execution
-within a clock.
+Both these constraints are motivated purely by implementation
+efficiency concerns.  In contrast, the semantic description here
+admits schedules that may vary from clock to clock, and may include
+duplicate rule execution within a clock.
 
 % ================================================================
 
@@ -683,13 +695,13 @@ bindings, rules, and interface method definitions.
 \grammore{\term{endmodule}}
 
 The optional ``\term{\# (} \many{\nterm{Ide}}{\term{,}} \term{)}'' on
-the first line represents parameters to the module.  If missing
-parameter, it is treated as \term{\#()}, the empty argument list.
+the first line represents parameters to the module.  If omitted, it is
+treated as \term{\#()}, the empty argument list.
 
-In the abstract syntax, such a module definition binding is converted
-into a \term{Binding} that binds the \nterm{Ide} (name of module
-definition) to a lambda-expression whose arguments are the parameters
-and body is a module-expression:
+In the abstract syntax, such a module definition is converted into a
+\term{Binding} that binds the \nterm{Ide} (name of module definition)
+to a lambda-expression whose arguments are the parameters and body is
+a module-expression:
 
 \begin{Verbatim}[frame=single, commandchars=\\\{\}]
 {\it Binding:}    ({\it{}Ide}, (Lambda [{\it{}{Ide}} ... {\it{}{Ide}}] {\it{}{module-expression}}))
@@ -977,7 +989,7 @@ functions create (instantiate) \term{PMI} module instances.
 When module-expressions are evaluated, they create \term{UMI} module
 instances.  User-defined module instances are closures---the
 \term{Env} component represents the bindings in the module, which may
-be used by in its rules and method definitions.
+be used in its rules and method definitions.
 
 % ----------------
 
@@ -1025,7 +1037,7 @@ next, giving it:
 \item an initially empty environment: \term{[]},
 \item an initial hierarchical name: \term{["main"]}
 \item an initially empty map of module instances: \term{DI.empty},
-\item and an initial application: \term{[main]} (\term{main} applied to no arguments).
+\item and an initial application: \term{(App [EIde "main"])} i.e., \term{main} applied to zero arguments.
 \end{tightlist}
 
 Static elaboration is performed by a classical mutually recursive
@@ -1130,11 +1142,11 @@ central focus of this document--the dynamic semantics of rules.
 \subsection{The central intuitions behind clocks and schedules}
 
 Hardware execution is a sequence of clocks.  In each clock we execute
-a sequence of rules\footnote{We remind that the sequence of rules is
-only a logical concept to explain semantics and understand behavior.
-It may not be discernible at all in the clocked digital hardware that
-is the output of the {\it bsc} compiler.}.  We call a sequence of
-rules a \emph{schedule}.
+a sequence of rules\footnote{We remind that the concept of a sequence
+of rules executing in a clock is only a logical concept to explain
+semantics and understand behavior.  It may not be discernible at all
+in the clocked digital hardware that is the output of the {\it bsc}
+compiler.}.  We call a sequence of rules a \emph{schedule}.
 
 As explained in Sec.~\ref{sec_schedules}, the semantics takes a
 schedule as a parameter, and takes no position on how that schedule is
@@ -1278,10 +1290,10 @@ current system state and list of rules fired so far in a clock, i.e.,
 it can take a last-minute instantaneous decision on which rule should
 be considered next.}.
 
-The result is a pair. The \term{Bool} component indicates whether any
-rule fired in this clock. The \term{System} component is the updated
-system state (which will be the same as the \term{system} argument if
-the rule did not fire).
+The result of \term{exec\_1\_clock} is a pair. The \term{Bool} component
+indicates whether any rule fired in this clock. The \term{System}
+component is the updated system state (which will be the same as the
+\term{system} argument if the rule did not fire).
 
 The \verb|exec_1_clock| function is straightforward, just using
 \term{foldM} to apply the \term{execRule} function over the rules in
@@ -1450,10 +1462,10 @@ applyPrimFn (PrimFn PrimDisplay) [ConstS s] =
 ...
 \end{Verbatim}
 
-The \term{applyMethod} function records the method called.  Then, for
-methods of primitive modules (like registers), it just implements the
-primitive's semantics for value methods, or collects the application
-for Action/ActionValue methods.
+The \term{applyMethod} function records the method called.  In
+addition, for methods of primitive modules (like registers), it just
+implements the primitive's semantics for value methods, or collects
+the application for Action/ActionValue methods.
 
 \begin{Verbatim}[frame=single, commandchars=\\\{\}]
 applyMethod :: System -> Val -> [Val] -> IO (Val, [Action], [MC])
